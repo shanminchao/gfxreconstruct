@@ -12,6 +12,7 @@ add_subdirectory(capture-vulkan)
 add_subdirectory(capture)
 add_subdirectory(gfxrecon)
 add_subdirectory(convert)
+add_subdirectory(capture-info)
 
 if(MSVC)
     add_subdirectory(launcher)
