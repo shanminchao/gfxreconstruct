@@ -54,6 +54,10 @@ class ParameterEncoder
 
     // clang-format off
 
+    void Reset() { handle_id_ = UINT64_MAX; }
+    bool HandleEncoded() { return handle_id_ != UINT64_MAX; }
+    format::HandleId GetHandle() const { return handle_id_; }
+
     // Values
     void EncodeInt8Value(int8_t value)                                                                                { EncodeValue(value); }
     void EncodeUInt8Value(uint8_t value)                                                                              { EncodeValue(value); }
@@ -66,7 +70,7 @@ class ParameterEncoder
     void EncodeFloatValue(float value)                                                                                { EncodeValue(value); }
     void EncodeDoubleValue(double value)                                                                              { EncodeValue(value); }
     void EncodeSizeTValue(size_t value)                                                                               { EncodeValue(static_cast<format::SizeTEncodeType>(value)); }
-    void EncodeHandleIdValue(format::HandleId value)                                                                  { EncodeValue(static_cast<format::HandleEncodeType>(value)); }
+    void EncodeHandleIdValue(format::HandleId value)                                                                  { handle_id_ = value; EncodeValue(static_cast<format::HandleEncodeType>(value)); }
 
     // Encode the address values for pointers to non-Vulkan objects to be used as object IDs.
     void EncodeAddress(const void* value)                                                                             { EncodeValue(reinterpret_cast<format::AddressEncodeType>(value)); }
@@ -650,6 +654,7 @@ class ParameterEncoder
     }
 
   private:
+    uint64_t handle_id_;
     util::OutputStream* output_stream_;
 };
 

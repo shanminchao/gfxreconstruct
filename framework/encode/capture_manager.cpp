@@ -94,7 +94,7 @@ CommonCaptureManager::CommonCaptureManager() :
     page_guard_track_ahb_memory_(false), page_guard_unblock_sigsegv_(false), page_guard_signal_handler_watcher_(false),
     page_guard_memory_mode_(kMemoryModeShadowInternal), page_guard_external_memory_(false), trim_enabled_(false),
     trim_boundary_(CaptureSettings::TrimBoundary::kUnknown), trim_current_range_(0), current_frame_(kFirstFrame),
-    queue_submit_count_(0), capture_mode_(kModeWrite), previous_hotkey_state_(false),
+    queue_submit_count_(0), capture_mode_(kModeWrite), capture_data_mode_(kCaptureDataMinimum), previous_hotkey_state_(false),
     previous_runtime_trigger_state_(CaptureSettings::RuntimeTriggerState::kNotUsed), debug_layer_(false),
     debug_device_lost_(false), screenshot_prefix_(""), screenshots_enabled_(false), disable_dxr_(false),
     accel_struct_padding_(0), iunknown_wrapping_(false), force_command_serialization_(false), queue_zero_only_(false),
@@ -503,6 +503,8 @@ ParameterEncoder* CommonCaptureManager::InitApiCallCapture(format::ApiCallId cal
     // Reset the parameter buffer and reserve space for an uncompressed FunctionCallHeader.
     thread_data->parameter_buffer_->ClearWithHeader(sizeof(format::FunctionCallHeader));
 
+    thread_data->parameter_encoder_->Reset();
+
     return thread_data->parameter_encoder_.get();
 }
 
@@ -520,7 +522,32 @@ ParameterEncoder* CommonCaptureManager::InitMethodCallCapture(format::ApiCallId 
 
 void CommonCaptureManager::EndApiCallCapture()
 {
-    if ((capture_mode_ & kModeWrite) == kModeWrite)
+    bool write_to_file = true;
+    if (capture_data_mode_ == kCaptureDataMinimum)
+    {
+        // Don't write out any parameters that are associated with a handle.
+        // Cache it instead. Need to parse these parameters during the submit-capture.
+        auto thread_data = GetThreadData();
+        assert(thread_data != nullptr);
+        auto parameter_buffer = thread_data->parameter_buffer_.get();
+        assert(thread_data->parameter_encoder_ != nullptr);
+        if (thread_data->parameter_encoder_->HandleEncoded())
+        {
+            auto parameter_buffer = thread_data->parameter_buffer_.get();
+            assert(parameter_buffer != nullptr);
+
+            // Copy this data
+            // Note: Ideally, we would modify the parameter buffer to point directly to cached memory,
+            // instead of writing it to a temp buffer and then copying it to the cached memory
+            size_t uncompressed_size = parameter_buffer->GetDataSize();
+            parameter_buffer->GetData();
+            memcpy();
+
+            write_to_file = false;
+        }
+    }
+
+    if (write_to_file && ((capture_mode_ & kModeWrite) == kModeWrite))
     {
         auto thread_data = GetThreadData();
         assert(thread_data != nullptr);

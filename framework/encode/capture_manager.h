@@ -193,6 +193,12 @@ class CommonCaptureManager
         kMemoryModeExternal          // Imported host memory without shadow allocations.
     };
 
+    enum CaptureDataMode
+    {
+        kCaptureDataEverything,
+        kCaptureDataMinimum
+    };
+
     typedef uint32_t CaptureMode;
 
     class ThreadData
@@ -367,6 +373,7 @@ class CommonCaptureManager
     uint32_t                                current_frame_;
     uint32_t                                queue_submit_count_;
     CaptureMode                             capture_mode_;
+    CaptureDataMode                         capture_data_mode_;
     bool                                    previous_hotkey_state_;
     CaptureSettings::RuntimeTriggerState    previous_runtime_trigger_state_;
     bool                                    debug_layer_;
@@ -380,6 +387,10 @@ class CommonCaptureManager
     bool                                    queue_zero_only_;
     bool                                    allow_pipeline_compile_required_;
     bool                                    quit_after_frame_ranges_;
+
+    // Ideally, use a heap manager instead of an std::vector
+    // And just use list of command buffers rather than an unordered_map
+    std::unordered_map<uint64_t, std::vector<uint8_t>> command_buffer_cache_;
 
     struct
     {
