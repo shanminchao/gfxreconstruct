@@ -258,6 +258,7 @@ class CommonCaptureManager
     bool                                IsTrimEnabled() const { return trim_enabled_; }
     uint32_t                            GetCurrentFrame() const { return current_frame_; }
     CaptureMode                         GetCaptureMode() const { return capture_mode_; }
+    CaptureDataMode                     GetCaptureDataMode() const { return capture_data_mode_; }
     bool                                GetDebugLayerSetting() const { return debug_layer_; }
     bool                                GetDebugDeviceLostSetting() const { return debug_device_lost_; }
     bool                                GetDisableDxrSetting() const { return disable_dxr_; }

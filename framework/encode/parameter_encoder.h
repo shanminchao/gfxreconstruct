@@ -70,7 +70,13 @@ class ParameterEncoder
     void EncodeFloatValue(float value)                                                                                { EncodeValue(value); }
     void EncodeDoubleValue(double value)                                                                              { EncodeValue(value); }
     void EncodeSizeTValue(size_t value)                                                                               { EncodeValue(static_cast<format::SizeTEncodeType>(value)); }
-    void EncodeHandleIdValue(format::HandleId value)                                                                  { handle_id_ = value; EncodeValue(static_cast<format::HandleEncodeType>(value)); }
+    void EncodeHandleIdValue(format::HandleId value)
+    {
+        // Command buffer handle is always first
+        if (handle_id_ == UINT64_MAX)
+            handle_id_ = value;
+        EncodeValue(static_cast<format::HandleEncodeType>(value));
+    }
 
     // Encode the address values for pointers to non-Vulkan objects to be used as object IDs.
     void EncodeAddress(const void* value)                                                                             { EncodeValue(reinterpret_cast<format::AddressEncodeType>(value)); }

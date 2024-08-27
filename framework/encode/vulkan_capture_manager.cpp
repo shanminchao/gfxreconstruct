@@ -2444,6 +2444,21 @@ void VulkanCaptureManager::PreProcess_vkQueueSubmit(VkQueue             queue,
 
     PreQueueSubmit();
 
+    if (common_manager_->GetCaptureDataMode() == CommonCaptureManager::kCaptureDataMinimum)
+    {
+        uint32_t                       commandBufferCount;
+        const VkCommandBuffer*         pCommandBuffers;
+
+        for (uint32_t s = 0; s < submitCount; ++s)
+        {
+            for (uint32_t c = 0; c < pSubmits[s].commandBufferCount; ++c)
+            {
+                const VkCommandBuffer cmd_buffer = pSubmits[s].pCommandBuffers[c];
+                vulkan_wrappers::GetWrappedId<vulkan_wrappers::CommandBufferWrapper>(cmd_buffer)
+            }
+        }
+    }
+
     if (IsCaptureModeTrack())
     {
         if (pSubmits)
