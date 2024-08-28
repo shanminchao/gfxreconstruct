@@ -540,24 +540,31 @@ void CommonCaptureManager::EndApiCallCapture()
             // Note: Ideally, we would modify the parameter buffer to point directly to cached memory,
             // instead of writing it to a temp buffer and then copying it to the cached memory
             format::HandleId handle_id = thread_data->parameter_encoder_->GetHandle();
-            size_t data_size = parameter_buffer->GetDataSize();
 
             auto cache_it = command_buffer_cache_.find(handle_id);
             uint8_t *data_start = nullptr;
             if (cache_it != command_buffer_cache_.end())
             {
+                size_t uncompressed_size = parameter_buffer->GetDataSize();
+                uint8_t* header_data = parameter_buffer->GetHeaderData();
+                assert((header_data != nullptr) &&
+                       (parameter_buffer->GetHeaderDataSize() == sizeof(format::FunctionCallHeader)));
+
+                auto uncompressed_header               = reinterpret_cast<format::FunctionCallHeader*>(header_data);
+                uncompressed_header->block_header.type = format::BlockType::kFunctionCallBlock;
+                uncompressed_header->api_call_id       = thread_data->call_id_;
+                uncompressed_header->thread_id         = thread_data->thread_id_;
+                uncompressed_header->block_header.size =
+                sizeof(uncompressed_header->api_call_id) + sizeof(uncompressed_header->thread_id) + uncompressed_size;
+                size_t data_size = parameter_buffer->GetHeaderDataSize() + parameter_buffer->GetDataSize();
+
+
                 size_t orig_size = cache_it->second.size();
                 cache_it->second.resize(cache_it->second.size() + data_size);
                 data_start = &cache_it->second[orig_size];
+                memcpy(data_start, parameter_buffer->GetHeaderData(), data_size);
+                write_to_file = false;
             }
-            else
-            {
-                command_buffer_cache_[handle_id] = std::vector<uint8_t>();
-                command_buffer_cache_[handle_id].resize(data_size);
-                data_start = &command_buffer_cache_[handle_id][0];
-            }
-            memcpy(data_start, parameter_buffer->GetData(), data_size);
-            write_to_file = false;
         }
     }
 

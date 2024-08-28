@@ -907,6 +907,25 @@ class VulkanCaptureManager : public ApiCaptureManager
         }
     }
 
+    void PreProcess_vkBeginCommandBuffer(VkCommandBuffer commandBuffer, const VkCommandBufferBeginInfo* pBeginInfo)
+    {
+        common_manager_->ClearCommandBuffer(vulkan_wrappers::GetWrappedId<vulkan_wrappers::CommandBufferWrapper>(commandBuffer));
+    }
+
+    void PostProcess_vkAllocateCommandBuffers(VkResult result, VkDevice, const VkCommandBufferAllocateInfo* pAllocateInfo, VkCommandBuffer* pCommandBuffers)
+    {
+        // TODO: Should probably track which command pool it's from, so that a command pool reset would clear associated command buffers
+        for (uint32_t c = 0; c < pAllocateInfo->commandBufferCount; ++c)
+        {
+            common_manager_->AddCommandBufferHandle(vulkan_wrappers::GetWrappedId<vulkan_wrappers::CommandBufferWrapper>(pCommandBuffers[c]));
+        }
+    }
+
+    void PostProcess_vkResetCommandBuffer(VkResult result, VkCommandBuffer commandBuffer, VkCommandBufferResetFlags flags)
+    {
+        common_manager_->ClearCommandBuffer(vulkan_wrappers::GetWrappedId<vulkan_wrappers::CommandBufferWrapper>(commandBuffer));
+    }
+
     void
     PostProcess_vkQueueSubmit(VkResult result, VkQueue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence)
     {

@@ -119,6 +119,25 @@ class CommonCaptureManager
 
     void EndFrame(format::ApiFamilyId api_family);
 
+    void AddCommandBufferHandle(format::HandleId object_id)
+    {
+        command_buffer_cache_[object_id] = std::vector<uint8_t>();
+    }
+
+    void ClearCommandBuffer(format::HandleId object_id)
+    {
+        auto cache_it = command_buffer_cache_.find(object_id);
+        assert(cache_it != command_buffer_cache_.end());
+        cache_it->second.clear();
+    }
+
+    const std::vector<uint8_t> &GetCommandBufferData(format::HandleId object_id) const
+    {
+        auto cache_it = command_buffer_cache_.find(object_id);
+        assert(cache_it != command_buffer_cache_.end());
+        return cache_it->second;
+    }
+
     // Pre/PostQueueSubmit to be called immediately before and after work is submitted to the GPU by vkQueueSubmit for
     // Vulkan or by ID3D12CommandQueue::ExecuteCommandLists for DX12.
     void PreQueueSubmit(format::ApiFamilyId api_family);

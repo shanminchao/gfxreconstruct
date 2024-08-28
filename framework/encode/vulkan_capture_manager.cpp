@@ -2444,6 +2444,8 @@ void VulkanCaptureManager::PreProcess_vkQueueSubmit(VkQueue             queue,
 
     PreQueueSubmit();
 
+    // Write only the command buffers that are submitted
+    // TODO: ONLY DO THIS IF CAPTURING
     if (common_manager_->GetCaptureDataMode() == CommonCaptureManager::kCaptureDataMinimum)
     {
         uint32_t                       commandBufferCount;
@@ -2454,11 +2456,12 @@ void VulkanCaptureManager::PreProcess_vkQueueSubmit(VkQueue             queue,
             for (uint32_t c = 0; c < pSubmits[s].commandBufferCount; ++c)
             {
                 const VkCommandBuffer cmd_buffer = pSubmits[s].pCommandBuffers[c];
-                vulkan_wrappers::GetWrappedId<vulkan_wrappers::CommandBufferWrapper>(cmd_buffer)
+                auto handle = vulkan_wrappers::GetWrappedId<vulkan_wrappers::CommandBufferWrapper>(cmd_buffer);
+                auto &cmd_buffer_data = common_manager_->GetCommandBufferData(handle);
+                WriteToFile(cmd_buffer_data.data(), cmd_buffer_data.size());
             }
         }
     }
-
     if (IsCaptureModeTrack())
     {
         if (pSubmits)
